@@ -1,0 +1,17 @@
+# Parameter grid for backtest/sweep.py. Each combination is run as a full
+# independent backtest over the same cached market data.
+
+spread_bps: [4, 8, 12, 20]
+max_position_usd: [250, 500, 1000]
+skew_multiplier: [0.5, 1.0, 1.5]   # multiplies strategy.quoting.max_skew_bps
+
+# Minimum number of simulated fills a run must have before it's eligible
+# for the ranked results table at all -- guards against a "great Sharpe"
+# that's really just 3 lucky fills.
+min_fills_for_ranking: 30
+
+# A run is flagged (not excluded, just flagged) as concentration-risk if
+# any single fill's contribution to total spread-capture PnL exceeds this
+# fraction -- a sign the result may be a large-fill artifact rather than a
+# repeatable edge.
+max_single_fill_pnl_share: 0.20

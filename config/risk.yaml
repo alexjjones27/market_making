@@ -1,0 +1,32 @@
+# Bankroll and risk controls. All enforced inside the backtest engine,
+# not just documented as intent.
+#
+# Hyperliquid prices and PnL are USD-denominated. `capital_usd` is treated
+# as your full bankroll in USD terms -- if your £2,500-5,000 bankroll is
+# actually held in GBP, convert at your own FX rate before relying on
+# these absolute-dollar numbers; the backtester itself does no FX.
+
+capital_usd: 2500
+
+# Fraction of bar volume assumed fillable when your quote is inside the
+# bar's [low, high] range. This is the single biggest lever on how
+# optimistic the Phase 1 fill model is -- see reporting/summary.py for
+# why. Keep this conservative; do not raise it to make results look better.
+fill_fraction_of_bar_volume: 0.07
+
+# Per-market position cap, enforced as a hard stop on new same-direction
+# quotes once breached (mirrors strategy.inventory.max_position_usd but
+# lives here because it's a risk control, not a quoting parameter -- the
+# engine enforces the tighter of the two).
+max_inventory_usd: 500
+
+# Daily loss limit as a fraction of starting-of-day capital. Once realized
+# + unrealized PnL for the day breaches -daily_loss_limit_pct * capital,
+# quoting halts for the remainder of that UTC day.
+daily_loss_limit_pct: 0.03
+
+# Auto-flatten a single market's position if that market's cumulative loss
+# (realized + unrealized, since backtest start) exceeds this fraction of
+# total capital. Flattening is simulated as an immediate taker fill at the
+# next bar's close, paying the taker fee.
+single_market_stop_loss_pct: 0.08

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+data_cache/*.parquet
+data_cache/**/*.parquet
+results/
+*.egg-info/
+.venv/

@@ -1,0 +1,18 @@
+# Quoting strategy parameters. All config, no hardcoded constants in code.
+
+fair_value:
+  method: "vwap"          # "mid" or "vwap"
+  vwap_window_secs: 45     # only used when method == "vwap"
+
+quoting:
+  spread_bps: 8             # full quoted spread, split evenly around fair value
+  max_skew_bps: 6             # max additional shift applied to both quotes at full inventory
+  order_size_usd: 60           # notional per resting quote, before vol/inventory adjustments
+
+volatility:
+  window_secs: 300               # realized vol lookback window
+  widen_threshold_bps: 15         # if realized vol (annualized, bps) exceeds this, widen spread
+  widen_multiplier: 1.8            # spread_bps is multiplied by this when threshold is breached
+
+inventory:
+  max_position_usd: 500             # hard cap on abs(position) per market, in notional USD
