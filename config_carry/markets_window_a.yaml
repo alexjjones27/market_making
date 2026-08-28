@@ -1,0 +1,18 @@
+# Regime window A: the earlier half of the ~208-day retention window
+# available for 1h candles on Hyperliquid. Not hand-picked for a
+# particular regime -- see run_carry_backtest.py's printed regime stats
+# (realized trend/vol/funding-persistence) for what actually happened here.
+markets:
+  - coin: BTC
+    start_date: "2026-02-05"
+    end_date: "2026-05-10"
+    candle_interval: "1h"
+  - coin: ETH
+    start_date: "2026-02-05"
+    end_date: "2026-05-10"
+    candle_interval: "1h"
+  - coin: SOL
+    start_date: "2026-02-05"
+    end_date: "2026-05-10"
+    candle_interval: "1h"
+cache_dir: "data_cache"

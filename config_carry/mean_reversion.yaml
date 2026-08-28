@@ -1,0 +1,8 @@
+# Fallback mean-reversion baseline (no existing MR backtester was found).
+# Z-score of price vs. a rolling mean/std; enter on a big enough dislocation,
+# exit on reversion toward the mean or a stop-loss.
+
+lookback_bars: 20
+entry_z: 2.0
+exit_z: 0.5
+stop_loss_pct: 0.03

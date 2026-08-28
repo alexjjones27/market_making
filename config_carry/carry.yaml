@@ -1,0 +1,25 @@
+# Carry (funding) gating/bias parameters, shared by both carry strategies
+# and the carry-only baseline.
+#
+# Hyperliquid funding settles hourly (confirmed empirically from the
+# cached funding-history data: ~24 records/day). Sign convention used
+# throughout strategy/carry.py: funding_rate > 0 means longs pay shorts
+# ("funding pays shorts" holds the carry-favourable side by being short);
+# funding_rate < 0 means shorts pay longs ("funding pays longs").
+#
+# strong_threshold_pct is a PRIOR, not fitted: chosen up front as a round
+# number that separates "near-zero, don't bias anything" from "a
+# persistent, economically notable funding skew" on a typical crypto perp,
+# based on the general order of magnitude of Hyperliquid/Binance/Bybit
+# funding regimes (single-digit-to-low-teens annualized is unremarkable;
+# sustained rates above this start to look like a real one-sided crowd).
+# It was NOT selected by scanning thresholds against this backtest's
+# results -- do not re-tune it based on which value makes Strategy 2 look
+# best. If you want a proper threshold sweep, that's a separate,
+# out-of-sample exercise.
+strong_threshold_annualized_pct: 15.0
+
+# Strategy 2 (soft bias) size multipliers applied ONLY at entry.
+aligned_multiplier: 1.5   # entry side agrees with the carry-favoured side, and funding is "strong"
+opposed_multiplier: 0.5   # entry side opposes carry, and funding is "strong" -- reduced, not zeroed
+neutral_multiplier: 1.0   # funding not "strong" -- no bias applied

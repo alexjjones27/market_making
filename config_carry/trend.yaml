@@ -1,0 +1,12 @@
+# Fallback trend/momentum baseline (no existing trend backtester was found
+# in this repo -- see run_carry_backtest.py). Deliberately simple per the
+# brief: "the point of this task is to test the carry overlay, not to find
+# the best possible base strategy."
+#
+# Signal: long while close > N-bar MA and the MA is rising; short while
+# close < N-bar MA and the MA is falling; flat otherwise. Recomputed fresh
+# every bar (stateless) -- entries and exits both come from this same rule,
+# so "carry gating" only has to filter entries, never invent separate exit
+# logic.
+
+ma_window_bars: 50

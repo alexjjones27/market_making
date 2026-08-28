@@ -1,0 +1,70 @@
+# Hyperliquid perpetuals fee schedule, hand-maintained from published docs.
+#
+# THERE IS NO API ENDPOINT THAT SERVES THIS TABLE. `userFees` on the Info
+# API returns an *authenticated user's current* tier based on their own
+# trailing volume, not a general schedule -- not usable for a generic
+# backtest. This file must be updated by hand when Hyperliquid changes fees.
+# Source: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees
+# Last checked: 2026-08-28
+#
+# Rates are in decimal (not bps, not percent): 0.00045 = 0.045%.
+# Negative maker rate = you are paid a rebate.
+
+as_of_date: "2026-08-28"
+
+# Base volume tiers, keyed by trailing-14d USD volume threshold.
+# The backtester picks a single tier for the whole run (see `assumed_tier`
+# below) rather than simulating volume accumulation across tiers, since
+# Phase 1 doesn't model your full cross-market trading history.
+volume_tiers:
+  - tier: 0
+    min_14d_volume_usd: 0
+    taker_rate: 0.00045
+    maker_rate: 0.00015
+  - tier: 1
+    min_14d_volume_usd: 5_000_000
+    taker_rate: 0.00040
+    maker_rate: 0.00012
+  - tier: 2
+    min_14d_volume_usd: 25_000_000
+    taker_rate: 0.00035
+    maker_rate: 0.00008
+  - tier: 3
+    min_14d_volume_usd: 100_000_000
+    taker_rate: 0.00030
+    maker_rate: 0.00004
+  - tier: 4
+    min_14d_volume_usd: 500_000_000
+    taker_rate: 0.00028
+    maker_rate: 0.0
+  - tier: 5
+    min_14d_volume_usd: 2_000_000_000
+    taker_rate: 0.00026
+    maker_rate: 0.0
+  - tier: 6
+    min_14d_volume_usd: 7_000_000_000
+    taker_rate: 0.00024
+    maker_rate: 0.0
+
+# Additional maker rebate tiers based on your share of platform maker
+# volume (separate axis from the tiers above). Stacks with maker_rate.
+maker_volume_rebate_tiers:
+  - tier: 0
+    min_maker_volume_share_pct: 0.0
+    extra_rebate: 0.0
+  - tier: 1
+    min_maker_volume_share_pct: 0.5
+    extra_rebate: -0.00001
+  - tier: 2
+    min_maker_volume_share_pct: 1.5
+    extra_rebate: -0.00002
+  - tier: 3
+    min_maker_volume_share_pct: 3.0
+    extra_rebate: -0.00003
+
+# Which tier the backtest assumes for the whole run. A £2.5-5k bankroll
+# doing MM-sized volume will realistically sit at tier 0 -- do not assume
+# a better tier than you'd actually qualify for, or the backtest will
+# overstate edge on top of the other Phase-1 optimism biases.
+assumed_volume_tier: 0
+assumed_maker_rebate_tier: 0

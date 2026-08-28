@@ -1,0 +1,16 @@
+# Regime window B: the later half of the retention window, immediately
+# following window A with no gap or overlap.
+markets:
+  - coin: BTC
+    start_date: "2026-05-10"
+    end_date: "2026-08-28"
+    candle_interval: "1h"
+  - coin: ETH
+    start_date: "2026-05-10"
+    end_date: "2026-08-28"
+    candle_interval: "1h"
+  - coin: SOL
+    start_date: "2026-05-10"
+    end_date: "2026-08-28"
+    candle_interval: "1h"
+cache_dir: "data_cache"

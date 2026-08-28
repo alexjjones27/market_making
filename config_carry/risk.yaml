@@ -1,0 +1,11 @@
+# Bankroll and sizing for the directional carry backtests. Separate from
+# config/risk.yaml (the market-making backtester's risk config) since the
+# position-based directional engine has different mechanics (one position
+# per market at a time, fixed notional per entry) than the MM quote engine.
+
+capital_usd: 2500
+
+# Fixed notional per position, in USD. Not re-sized while a position is
+# held -- the carry size multiplier (config_carry/carry.yaml) only applies
+# at entry time, so a trade's size is locked in until it closes.
+order_notional_usd: 200
