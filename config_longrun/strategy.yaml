@@ -1,0 +1,21 @@
+# Fair-value/vol windows widened to match the 15m bar size used in
+# config_longrun/markets.yaml (see that file's comment). At 1m bars a 45s
+# VWAP window is meaningful; at 15m bars it must be a multiple of 900s or
+# it degenerates to "just the current bar."
+
+fair_value:
+  method: "vwap"
+  vwap_window_secs: 900
+
+quoting:
+  spread_bps: 8
+  max_skew_bps: 6
+  order_size_usd: 60
+
+volatility:
+  window_secs: 3600
+  widen_threshold_bps: 15
+  widen_multiplier: 1.8
+
+inventory:
+  max_position_usd: 500

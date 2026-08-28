@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from backtest.adverse_selection import compute_adverse_selection
 from backtest.engine import BacktestEngine
 from backtest.fill_model import TopOfBookFillModel
 from backtest.metrics import compute_portfolio_metrics
@@ -35,7 +36,15 @@ def main():
     engine = BacktestEngine(config, fill_model)
     result = engine.run(data)
 
-    pm = compute_portfolio_metrics(result)
+    adverse = None
+    if config.risk.adverse_selection.enabled:
+        adverse = compute_adverse_selection(
+            result.market_states,
+            config.risk.adverse_selection.threshold_bps,
+            config.risk.adverse_selection.lookahead_bars,
+        )
+
+    pm = compute_portfolio_metrics(result, adverse)
     print_summary(config, pm)
 
     if not args.no_plots:

@@ -23,11 +23,14 @@ class MarketMetrics:
     trading_pnl: float
     fees_pnl: float
     funding_pnl: float
+    adverse_selection_pnl: float
     total_pnl: float
     max_abs_position_usd: float
     mean_abs_position_usd: float
     was_flattened: bool
     largest_fill_pnl_share: float  # flag: fraction of |trading_pnl| driven by one fill
+    n_toxic_fills: int
+    n_evaluable_fills: int
 
 
 @dataclasses.dataclass
@@ -36,6 +39,8 @@ class PortfolioMetrics:
     total_trading_pnl: float
     total_fees_pnl: float
     total_funding_pnl: float
+    total_adverse_selection_pnl: float
+    adverse_selection_enabled: bool
     sharpe_annualized: float | None
     sharpe_note: str
     max_drawdown_usd: float
@@ -59,13 +64,24 @@ def _fill_pnl_shares(fills, fair_value_at_fill=None) -> float:
     return max(notionals) / total
 
 
-def compute_market_metrics(ms) -> MarketMetrics:
+def compute_market_metrics(ms, adverse: dict | None = None) -> MarketMetrics:
     fills = ms.fills
     buy_fills = [f for f in fills if f.side in ("buy", "flatten_buy")]
     sell_fills = [f for f in fills if f.side in ("sell", "flatten_sell")]
 
     inv_usd = np.array([x[2] for x in ms.inventory_series]) if ms.inventory_series else np.array([0.0])
     trading_pnl = ms.pnl_series[-1][1] if ms.pnl_series else 0.0
+
+    adverse_pnl = 0.0
+    n_toxic = 0
+    n_evaluable = 0
+    if adverse is not None and ms.coin in adverse:
+        a = adverse[ms.coin]
+        adverse_pnl = a.penalty_cash
+        n_toxic = a.n_toxic_fills
+        n_evaluable = a.n_evaluable_fills
+
+    total_pnl = (ms.pnl_series[-1][4] if ms.pnl_series else 0.0) + adverse_pnl
 
     return MarketMetrics(
         coin=ms.coin,
@@ -78,20 +94,23 @@ def compute_market_metrics(ms) -> MarketMetrics:
         trading_pnl=trading_pnl,
         fees_pnl=ms.fees_cash,
         funding_pnl=ms.funding_cash,
-        total_pnl=ms.pnl_series[-1][4] if ms.pnl_series else 0.0,
+        adverse_selection_pnl=adverse_pnl,
+        total_pnl=total_pnl,
         max_abs_position_usd=float(np.max(np.abs(inv_usd))) if len(inv_usd) else 0.0,
         mean_abs_position_usd=float(np.mean(np.abs(inv_usd))) if len(inv_usd) else 0.0,
         was_flattened=False,
         largest_fill_pnl_share=_fill_pnl_shares(fills),
+        n_toxic_fills=n_toxic,
+        n_evaluable_fills=n_evaluable,
     )
 
 
-def compute_portfolio_metrics(result: BacktestResult) -> PortfolioMetrics:
+def compute_portfolio_metrics(result: BacktestResult, adverse: dict | None = None) -> PortfolioMetrics:
     market_metrics = []
-    total_trading = total_fees = total_funding = 0.0
+    total_trading = total_fees = total_funding = total_adverse = 0.0
 
     for coin, ms in result.market_states.items():
-        mm = compute_market_metrics(ms)
+        mm = compute_market_metrics(ms, adverse)
         mm.n_quote_bars = result.quote_bar_count.get(coin, 0)
         mm.fill_rate_buy = mm.n_buy_fills / mm.n_quote_bars if mm.n_quote_bars else 0.0
         mm.fill_rate_sell = mm.n_sell_fills / mm.n_quote_bars if mm.n_quote_bars else 0.0
@@ -100,11 +119,20 @@ def compute_portfolio_metrics(result: BacktestResult) -> PortfolioMetrics:
         total_trading += mm.trading_pnl
         total_fees += mm.fees_pnl
         total_funding += mm.funding_pnl
+        total_adverse += mm.adverse_selection_pnl
 
-    total_pnl = total_trading + total_fees + total_funding
+    total_pnl = total_trading + total_fees + total_funding + total_adverse
 
     eq_df = pd.DataFrame(result.global_equity_series, columns=["timestamp", "equity"])
     eq_df = eq_df.drop_duplicates(subset="timestamp").sort_values("timestamp").reset_index(drop=True)
+
+    if adverse:
+        events = [ev for a in adverse.values() for ev in a.events]
+        if events:
+            pen = pd.DataFrame(events, columns=["timestamp", "penalty"])
+            pen = pen.groupby("timestamp")["penalty"].sum().sort_index().cumsum()
+            aligned = pen.reindex(eq_df["timestamp"], method="ffill").fillna(0.0)
+            eq_df["equity"] = eq_df["equity"].to_numpy() + aligned.to_numpy()
 
     running_max = eq_df["equity"].cummax()
     drawdown = eq_df["equity"] - running_max
@@ -139,6 +167,8 @@ def compute_portfolio_metrics(result: BacktestResult) -> PortfolioMetrics:
         total_trading_pnl=total_trading,
         total_fees_pnl=total_fees,
         total_funding_pnl=total_funding,
+        total_adverse_selection_pnl=total_adverse,
+        adverse_selection_enabled=adverse is not None,
         sharpe_annualized=sharpe,
         sharpe_note=sharpe_note,
         max_drawdown_usd=max_dd_usd,

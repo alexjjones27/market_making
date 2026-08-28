@@ -1,0 +1,25 @@
+# Longer-horizon variant of config/markets.yaml: 15m candles instead of 1m,
+# to fit within Hyperliquid's ~52-day retention window for that interval
+# (1m candles only retain ~3.5 days -- see README "Data availability
+# constraint"). Use this config dir (--config-dir config_longrun) for any
+# analysis that needs statistical power (Sharpe, sweeps, stress tests);
+# use the default config/ for the finest-grained fill simulation over a
+# short window.
+
+markets:
+  - coin: BTC
+    start_date: "2026-07-10"
+    end_date: "2026-08-28"
+    candle_interval: "15m"
+
+  - coin: ETH
+    start_date: "2026-07-10"
+    end_date: "2026-08-28"
+    candle_interval: "15m"
+
+  - coin: SOL
+    start_date: "2026-07-10"
+    end_date: "2026-08-28"
+    candle_interval: "15m"
+
+cache_dir: "data_cache"

@@ -98,12 +98,20 @@ class StrategyConfig:
 
 
 @dataclasses.dataclass
+class AdverseSelectionConfig:
+    enabled: bool
+    lookahead_bars: int
+    threshold_bps: float
+
+
+@dataclasses.dataclass
 class RiskConfig:
     capital_usd: float
     fill_fraction_of_bar_volume: float
     max_inventory_usd: float
     daily_loss_limit_pct: float
     single_market_stop_loss_pct: float
+    adverse_selection: AdverseSelectionConfig
 
 
 @dataclasses.dataclass
@@ -150,6 +158,8 @@ def load_config(config_dir: Optional[Path] = None) -> Config:
     )
 
     r = _load_yaml(config_dir / "risk.yaml")
+    r = dict(r)
+    r["adverse_selection"] = AdverseSelectionConfig(**r["adverse_selection"])
     risk = RiskConfig(**r)
 
     sw = _load_yaml(config_dir / "sweep.yaml")

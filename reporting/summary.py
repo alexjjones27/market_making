@@ -52,6 +52,13 @@ def print_summary(config: Config, pm: PortfolioMetrics) -> None:
     print(f"  Trading/spread: ${pm.total_trading_pnl:,.2f}")
     print(f"  Fees:           ${pm.total_fees_pnl:,.2f}")
     print(f"  Funding:        ${pm.total_funding_pnl:,.2f}")
+    if pm.adverse_selection_enabled:
+        print(f"  Adverse selection penalty (stress test): ${pm.total_adverse_selection_pnl:,.2f}")
+        print(
+            "    ** Look-ahead stress-test overlay: charges the realized adverse move on any\n"
+            "    ** fill where price moved > threshold against you within N bars after the fill.\n"
+            "    ** This is a backtest analysis tool only -- it cannot be computed live."
+        )
     print(f"Max drawdown:     ${pm.max_drawdown_usd:,.2f} ({pm.max_drawdown_pct:.2%})")
     if pm.sharpe_annualized is not None:
         print(f"Sharpe (annualized, daily returns): {pm.sharpe_annualized:.2f}  -- {pm.sharpe_note}")
@@ -67,7 +74,10 @@ def print_summary(config: Config, pm: PortfolioMetrics) -> None:
         print(f"\n{mm.coin}:")
         print(f"  Fills: {mm.n_fills} total ({mm.n_buy_fills} buy, {mm.n_sell_fills} sell)")
         print(f"  Fill rate: buy={mm.fill_rate_buy:.4f}/bar, sell={mm.fill_rate_sell:.4f}/bar (of {mm.n_quote_bars} quoted bars)")
-        print(f"  PnL: total=${mm.total_pnl:,.2f}  trading=${mm.trading_pnl:,.2f}  fees=${mm.fees_pnl:,.2f}  funding=${mm.funding_pnl:,.2f}")
+        adv_str = f"  adverse_selection=${mm.adverse_selection_pnl:,.2f}" if mm.n_evaluable_fills else ""
+        print(f"  PnL: total=${mm.total_pnl:,.2f}  trading=${mm.trading_pnl:,.2f}  fees=${mm.fees_pnl:,.2f}  funding=${mm.funding_pnl:,.2f}{adv_str}")
+        if mm.n_evaluable_fills:
+            print(f"  Toxic fills (adverse move > threshold within lookahead): {mm.n_toxic_fills}/{mm.n_evaluable_fills} evaluable")
         print(f"  Position: max |pos|=${mm.max_abs_position_usd:,.2f}  mean |pos|=${mm.mean_abs_position_usd:,.2f}")
         if mm.was_flattened:
             print("  ** AUTO-FLATTENED: single-market stop loss was breached during this run **")
